@@ -1,0 +1,1227 @@
+```html
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Sante Scale - Kalkulator HPP AI</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <!-- Google Fonts: Plus Jakarta Sans -->
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['"Plus Jakarta Sans"', 'sans-serif'],
+                    },
+                    colors: {
+                        sante: {
+                            50: '#ecfdf5',
+                            100: '#d1fae5',
+                            200: '#a7f3d0',
+                            500: '#10b981',
+                            600: '#059669',
+                            700: '#047857',
+                            800: '#065f46',
+                            900: '#064e3b',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background-color: #0f172a;
+            overscroll-behavior-y: contain;
+        }
+        /* Custom Scrollbar for Mobile Container */
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+        /* Range Slider Styling */
+        input[type=range] {
+            -webkit-appearance: none;
+            background: transparent;
+        }
+        input[type=range]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            height: 24px;
+            width: 24px;
+            border-radius: 50%;
+            background: #059669;
+            border: 3px solid #ffffff;
+            cursor: pointer;
+            margin-top: -8px;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.25);
+            transition: transform 0.1s ease;
+        }
+        input[type=range]::-webkit-slider-thumb:active {
+            transform: scale(1.15);
+        }
+        input[type=range]::-webkit-slider-runnable-track {
+            width: 100%;
+            height: 8px;
+            cursor: pointer;
+            background: #d1fae5;
+            border-radius: 999px;
+        }
+        @keyframes scanLine {
+            0% { top: 5%; opacity: 0.9; }
+            50% { top: 90%; opacity: 1; }
+            100% { top: 5%; opacity: 0.9; }
+        }
+        .scanner-bar {
+            position: absolute;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, transparent, #10b981, #34d399, #10b981, transparent);
+            box-shadow: 0 0 12px 2px #10b981;
+            animation: scanLine 2.2s infinite ease-in-out;
+        }
+    </style>
+</head>
+<body class="flex justify-center items-start min-h-screen sm:py-6 text-slate-800 select-none">
+
+    <!-- Mobile App Shell -->
+    <div class="w-full max-w-[430px] bg-slate-50 min-h-screen sm:min-h-[860px] sm:max-h-[92vh] sm:rounded-[38px] shadow-2xl overflow-hidden flex flex-col relative border-0 sm:border-[6px] sm:border-slate-800">
+        
+        <!-- Top Status Bar (Decorative for Desktop Preview) -->
+        <div class="hidden sm:flex justify-between items-center px-7 pt-2.5 pb-1 bg-sante-700 text-white text-xs font-semibold">
+            <span id="clockTime">09:41</span>
+            <div class="w-20 h-4 bg-black/25 rounded-full"></div>
+            <div class="flex items-center gap-1.5">
+                <i class="fa-solid fa-signal text-[10px]"></i>
+                <i class="fa-solid fa-wifi text-[10px]"></i>
+                <i class="fa-solid fa-battery-full text-xs"></i>
+            </div>
+        </div>
+
+        <!-- App Header -->
+        <header class="bg-gradient-to-br from-sante-700 via-sante-600 to-emerald-500 text-white px-5 pt-4 pb-5 shadow-md relative z-10">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center gap-3">
+                    <div class="w-11 h-11 rounded-2xl bg-white/15 backdrop-blur-md flex items-center justify-center border border-white/25 shadow-inner">
+                        <i class="fa-solid fa-scale-balanced text-xl text-amber-300"></i>
+                    </div>
+                    <div>
+                        <div class="flex items-center gap-2">
+                            <h1 class="font-extrabold text-lg tracking-tight leading-none">Sante Scale</h1>
+                            <span class="bg-amber-400 text-slate-900 text-[10px] font-extrabold px-2 py-0.5 rounded-full uppercase tracking-wider">AI Vision</span>
+                        </div>
+                        <p class="text-xs text-emerald-100 mt-1">Foto Barang, HPP & Cuan Langsung Beres!</p>
+                    </div>
+                </div>
+                <button onclick="resetCalculator()" title="Reset Kalkulator" class="w-9 h-9 rounded-xl bg-white/10 hover:bg-white/20 active:scale-95 flex items-center justify-center transition">
+                    <i class="fa-solid fa-rotate-right text-sm"></i>
+                </button>
+            </div>
+        </header>
+
+        <!-- Toast Notification -->
+        <div id="toastBox" class="fixed top-5 left-1/2 -translate-x-1/2 z-50 pointer-events-none opacity-0 transition-all duration-300 transform -translate-y-3 w-[90%] max-w-[380px]">
+            <div id="toastInner" class="bg-slate-900/95 backdrop-blur text-white px-4 py-3 rounded-2xl shadow-xl flex items-center gap-3 border border-slate-700 text-xs font-medium">
+                <i id="toastIcon" class="fa-solid fa-circle-check text-emerald-400 text-base"></i>
+                <span id="toastText" class="flex-1">Notifikasi</span>
+            </div>
+        </div>
+
+        <!-- Main Scrollable Content -->
+        <main id="mainScroll" class="flex-1 overflow-y-auto no-scrollbar pb-28 px-4 pt-4 space-y-4">
+
+            <!-- TAB 1: KALKULATOR & SCANNER -->
+            <div id="tabCalculator" class="space-y-4">
+
+                <!-- AI CAMERA / UPLOAD CARD -->
+                <section class="bg-white rounded-3xl p-4 shadow-sm border border-slate-200/80 relative overflow-hidden">
+                    <div class="flex items-center justify-between mb-3">
+                        <div class="flex items-center gap-2">
+                            <span class="w-6 h-6 rounded-lg bg-sante-100 text-sante-700 flex items-center justify-center text-xs font-bold">1</span>
+                            <h2 class="font-bold text-sm text-slate-800">Foto / Scan Barang Otomatis</h2>
+                        </div>
+                        <span class="text-[11px] font-semibold text-sante-600 bg-sante-50 px-2.5 py-0.5 rounded-full border border-sante-200">
+                            <i class="fa-solid fa-wand-magic-sparkles mr-1"></i>Gemini AI
+                        </span>
+                    </div>
+
+                    <!-- Hidden File Inputs (Camera & Gallery) -->
+                    <input type="file" id="cameraInput" accept="image/*" capture="environment" class="hidden" onchange="handleImageUpload(event)">
+                    <input type="file" id="galleryInput" accept="image/*" class="hidden" onchange="handleImageUpload(event)">
+
+                    <!-- Image Preview / Empty State Box -->
+                    <div id="scanZone" class="relative rounded-2xl border-2 border-dashed border-emerald-300 bg-gradient-to-b from-emerald-50/60 to-slate-50 p-4 text-center transition-all">
+                        
+                        <!-- Empty State -->
+                        <div id="emptyScanState" class="py-3">
+                            <div class="w-16 h-16 rounded-full bg-emerald-100 text-sante-600 mx-auto flex items-center justify-center mb-2.5 shadow-inner">
+                                <i class="fa-solid fa-camera-retro text-2xl"></i>
+                            </div>
+                            <h3 class="font-bold text-sm text-slate-700">Foto Makanan, Minuman, atau Produkmu</h3>
+                            <p class="text-xs text-slate-500 mt-1 max-w-[270px] mx-auto leading-relaxed">
+                                AI akan otomatis mendeteksi bahan baku, kemasan, operasional & menghitungkan HPP-nya!
+                            </p>
+
+                            <div class="grid grid-cols-2 gap-2.5 mt-4">
+                                <button onclick="document.getElementById('cameraInput').click()" class="bg-sante-600 hover:bg-sante-700 active:scale-95 text-white font-bold text-xs py-3 px-3 rounded-xl shadow-md shadow-emerald-600/20 flex items-center justify-center gap-2 transition">
+                                    <i class="fa-solid fa-camera text-sm"></i>
+                                    <span>Ambil Foto</span>
+                                </button>
+                                <button onclick="document.getElementById('galleryInput').click()" class="bg-white hover:bg-slate-100 active:scale-95 text-slate-700 font-bold text-xs py-3 px-3 rounded-xl border border-slate-200 shadow-sm flex items-center justify-center gap-2 transition">
+                                    <i class="fa-solid fa-image text-sm text-sante-600"></i>
+                                    <span>Pilih Galeri</span>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Preview State (When photo uploaded) -->
+                        <div id="previewScanState" class="hidden">
+                            <div class="relative rounded-xl overflow-hidden max-h-52 bg-slate-900 mx-auto">
+                                <img id="uploadedImagePreview" src="" alt="Preview Barang" class="w-full h-48 object-cover">
+                                <!-- Scanner overlay during AI loading -->
+                                <div id="scannerOverlay" class="hidden absolute inset-0 bg-slate-900/65 backdrop-blur-[2px] flex flex-col items-center justify-center text-white p-4">
+                                    <div class="scanner-bar"></div>
+                                    <i class="fa-solid fa-microchip fa-spin text-2xl text-emerald-400 mb-2"></i>
+                                    <p class="font-bold text-xs tracking-wide">Gemini AI Sedang Menganalisis Barang...</p>
+                                    <p class="text-[11px] text-emerald-200 mt-0.5">Mendeteksi komposisi bahan, kemasan & harga pasar</p>
+                                </div>
+                                <!-- Badge AI Done -->
+                                <div id="aiSuccessBadge" class="hidden absolute bottom-2 left-2 right-2 bg-slate-900/80 backdrop-blur-md text-white px-3 py-1.5 rounded-lg flex items-center justify-between text-[11px]">
+                                    <span class="flex items-center gap-1.5 font-semibold text-emerald-300">
+                                        <i class="fa-solid fa-circle-check"></i> Dianalisis oleh AI
+                                    </span>
+                                    <button onclick="document.getElementById('cameraInput').click()" class="underline text-white hover:text-amber-300 font-medium">
+                                        Foto Ulang
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Quick Preset / Simulasi Tanpa Foto -->
+                    <div class="mt-3 pt-3 border-t border-slate-100">
+                        <div class="flex items-center justify-between mb-2">
+                            <span class="text-[11px] font-semibold text-slate-500">Belum ada foto? Coba simulasi instan:</span>
+                        </div>
+                        <div class="flex gap-2 overflow-x-auto no-scrollbar pb-1">
+                            <button onclick="loadPreset('kopi')" class="shrink-0 bg-amber-50 hover:bg-amber-100 active:scale-95 text-amber-900 border border-amber-200/80 rounded-xl px-3 py-2 text-xs font-semibold flex items-center gap-1.5 transition">
+                                <span>🧋</span> Es Kopi Susu
+                            </button>
+                            <button onclick="loadPreset('ricebowl')" class="shrink-0 bg-orange-50 hover:bg-orange-100 active:scale-95 text-orange-900 border border-orange-200/80 rounded-xl px-3 py-2 text-xs font-semibold flex items-center gap-1.5 transition">
+                                <span>🍱</span> Rice Bowl Ayam
+                            </button>
+                            <button onclick="loadPreset('brownies')" class="shrink-0 bg-rose-50 hover:bg-rose-100 active:scale-95 text-rose-900 border border-rose-200/80 rounded-xl px-3 py-2 text-xs font-semibold flex items-center gap-1.5 transition">
+                                <span>🍫</span> Fudgy Brownies
+                            </button>
+                            <button onclick="loadPreset('totebag')" class="shrink-0 bg-indigo-50 hover:bg-indigo-100 active:scale-95 text-indigo-900 border border-indigo-200/80 rounded-xl px-3 py-2 text-xs font-semibold flex items-center gap-1.5 transition">
+                                <span>👜</span> Totebag Kanvas
+                            </button>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- AI INSIGHT BANNER (Appears when AI / Preset loaded) -->
+                <div id="aiInsightBox" class="hidden bg-gradient-to-r from-emerald-900 to-teal-800 text-white rounded-2xl p-3.5 shadow-sm flex items-start gap-3">
+                    <div class="w-8 h-8 rounded-xl bg-white/15 flex items-center justify-center shrink-0 mt-0.5">
+                        <i class="fa-solid fa-lightbulb text-amber-300 text-sm"></i>
+                    </div>
+                    <div class="text-xs leading-relaxed">
+                        <p class="font-bold text-emerald-200 uppercase tracking-wider text-[10px]">Ringkasan Analisis AI</p>
+                        <p id="aiInsightText" class="text-white/95 mt-0.5">Rincian bahan dan estimasi harga pasar otomatis telah dimuat. Kamu bebas mengubah angka di bawah sesuai kondisi usahamu!</p>
+                    </div>
+                </div>
+
+                <!-- SECTION 2: INFO PRODUK & BATCH -->
+                <section class="bg-white rounded-3xl p-4 shadow-sm border border-slate-200/80 space-y-3">
+                    <div class="flex items-center gap-2">
+                        <span class="w-6 h-6 rounded-lg bg-sante-100 text-sante-700 flex items-center justify-center text-xs font-bold">2</span>
+                        <h2 class="font-bold text-sm text-slate-800">Detail Produk & Porsi Produksi</h2>
+                    </div>
+
+                    <div class="space-y-3">
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-600 mb-1">Nama Barang / Produk</label>
+                            <input type="text" id="productName" oninput="recalculateAll()" placeholder="Contoh: Es Kopi Susu Gula Aren" 
+                                class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 text-sm font-semibold text-slate-800 focus:outline-none focus:border-sante-500 focus:bg-white transition">
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-3">
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-600 mb-1">Hasil per Batch (Output)</label>
+                                <div class="flex items-center bg-slate-50 border border-slate-200 rounded-xl overflow-hidden">
+                                    <button onclick="adjustBatchQty(-1)" class="w-10 h-10 flex items-center justify-center text-slate-600 hover:bg-slate-200 active:bg-slate-300 font-bold">-</button>
+                                    <input type="number" id="batchYield" min="1" value="1" oninput="recalculateAll()" 
+                                        class="w-full bg-transparent text-center font-extrabold text-sm text-slate-800 focus:outline-none">
+                                    <button onclick="adjustBatchQty(1)" class="w-10 h-10 flex items-center justify-center text-slate-600 hover:bg-slate-200 active:bg-slate-300 font-bold">+</button>
+                                </div>
+                            </div>
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-600 mb-1">Satuan Jual</label>
+                                <select id="unitName" onchange="recalculateAll()" class="w-full h-10 bg-slate-50 border border-slate-200 rounded-xl px-3 text-sm font-semibold text-slate-800 focus:outline-none focus:border-sante-500">
+                                    <option value="Cup / Porsi">Cup / Porsi</option>
+                                    <option value="Pcs / Buah">Pcs / Buah</option>
+                                    <option value="Box / Kotak">Box / Kotak</option>
+                                    <option value="Bungkus / Pack">Bungkus / Pack</option>
+                                    <option value="Botol">Botol</option>
+                                </select>
+                            </div>
+                        </div>
+                        <p class="text-[11px] text-slate-400">
+                            <i class="fa-solid fa-circle-info mr-1"></i>Jika bahan di bawah adalah untuk 1 resep (misal jadi 10 cup), isi Hasil per Batch dengan angka 10.
+                        </p>
+                    </div>
+                </section>
+
+                <!-- SECTION 3: KOMPONEN BIAYA (BAHAN BAKU, KEMASAN, OPERASIONAL) -->
+                <section class="bg-white rounded-3xl p-4 shadow-sm border border-slate-200/80 space-y-4">
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center gap-2">
+                            <span class="w-6 h-6 rounded-lg bg-sante-100 text-sante-700 flex items-center justify-center text-xs font-bold">3</span>
+                            <h2 class="font-bold text-sm text-slate-800">Rincian Modal (1 Batch)</h2>
+                        </div>
+                        <span id="totalCostBadge" class="text-xs font-extrabold text-sante-700 bg-sante-50 px-2.5 py-1 rounded-lg">Rp 0</span>
+                    </div>
+
+                    <!-- A. Bahan Baku -->
+                    <div class="space-y-2">
+                        <div class="flex items-center justify-between">
+                            <label class="text-xs font-bold text-slate-700 flex items-center gap-1.5">
+                                <i class="fa-solid fa-wheat-awn text-amber-500"></i> Bahan Baku Utama
+                            </label>
+                            <span id="subtotalMaterials" class="text-xs font-bold text-slate-500">Rp 0</span>
+                        </div>
+
+                        <div id="materialsList" class="space-y-2"></div>
+
+                        <button onclick="addCostItem('materials')" class="w-full py-2 rounded-xl border border-dashed border-emerald-400 text-sante-700 bg-emerald-50/50 hover:bg-emerald-50 active:scale-[0.99] text-xs font-bold flex items-center justify-center gap-1.5 transition">
+                            <i class="fa-solid fa-plus"></i> Tambah Bahan Baku
+                        </button>
+                    </div>
+
+                    <hr class="border-slate-100">
+
+                    <!-- B. Kemasan / Packaging -->
+                    <div class="space-y-2">
+                        <div class="flex items-center justify-between">
+                            <label class="text-xs font-bold text-slate-700 flex items-center gap-1.5">
+                                <i class="fa-solid fa-box-open text-blue-500"></i> Kemasan & Pelengkap
+                            </label>
+                            <span id="subtotalPackaging" class="text-xs font-bold text-slate-500">Rp 0</span>
+                        </div>
+
+                        <div id="packagingList" class="space-y-2"></div>
+
+                        <button onclick="addCostItem('packaging')" class="w-full py-2 rounded-xl border border-dashed border-blue-300 text-blue-700 bg-blue-50/40 hover:bg-blue-50 active:scale-[0.99] text-xs font-bold flex items-center justify-center gap-1.5 transition">
+                            <i class="fa-solid fa-plus"></i> Tambah Biaya Kemasan
+                        </button>
+                    </div>
+
+                    <hr class="border-slate-100">
+
+                    <!-- C. Operasional & Lainnya -->
+                    <div class="space-y-2">
+                        <div class="flex items-center justify-between">
+                            <label class="text-xs font-bold text-slate-700 flex items-center gap-1.5">
+                                <i class="fa-solid fa-bolt text-purple-500"></i> Operasional (Gas, Listrik, Tenaga)
+                            </label>
+                            <span id="subtotalOverhead" class="text-xs font-bold text-slate-500">Rp 0</span>
+                        </div>
+
+                        <div id="overheadList" class="space-y-2"></div>
+
+                        <button onclick="addCostItem('overhead')" class="w-full py-2 rounded-xl border border-dashed border-purple-300 text-purple-700 bg-purple-50/40 hover:bg-purple-50 active:scale-[0.99] text-xs font-bold flex items-center justify-center gap-1.5 transition">
+                            <i class="fa-solid fa-plus"></i> Tambah Biaya Operasional
+                        </button>
+                    </div>
+                </section>
+
+                <!-- SECTION 4: TARGET CUAN / MARGIN -->
+                <section class="bg-white rounded-3xl p-4 shadow-sm border border-slate-200/80 space-y-3">
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center gap-2">
+                            <span class="w-6 h-6 rounded-lg bg-sante-100 text-sante-700 flex items-center justify-center text-xs font-bold">4</span>
+                            <h2 class="font-bold text-sm text-slate-800">Atur Target Keuntungan</h2>
+                        </div>
+                        <span id="marginValueBadge" class="bg-emerald-600 text-white font-extrabold text-xs px-3 py-1 rounded-full shadow-sm">
+                            Markup +40%
+                        </span>
+                    </div>
+
+                    <div class="pt-1 pb-2">
+                        <input type="range" id="marginSlider" min="5" max="150" step="5" value="40" oninput="syncMarginSlider(this.value)" class="w-full">
+                        <div class="flex justify-between text-[10px] font-semibold text-slate-400 mt-1">
+                            <span>Tipis (5%)</span>
+                            <span>Standar (35-50%)</span>
+                            <span>Premium (100%+)</span>
+                        </div>
+                    </div>
+
+                    <!-- Quick Margin Buttons -->
+                    <div class="grid grid-cols-4 gap-2">
+                        <button onclick="setMarginPreset(20)" id="btnMargin20" class="margin-preset-btn py-2 px-1 rounded-xl border border-slate-200 text-xs font-bold text-slate-600 hover:bg-slate-50 transition flex flex-col items-center">
+                            <span>Santai</span>
+                            <span class="text-[11px] text-sante-600 font-extrabold">20%</span>
+                        </button>
+                        <button onclick="setMarginPreset(35)" id="btnMargin35" class="margin-preset-btn py-2 px-1 rounded-xl border border-slate-200 text-xs font-bold text-slate-600 hover:bg-slate-50 transition flex flex-col items-center">
+                            <span>Standar</span>
+                            <span class="text-[11px] text-sante-600 font-extrabold">35%</span>
+                        </button>
+                        <button onclick="setMarginPreset(50)" id="btnMargin50" class="margin-preset-btn py-2 px-1 rounded-xl border border-slate-200 text-xs font-bold text-slate-600 hover:bg-slate-50 transition flex flex-col items-center">
+                            <span>Ideal</span>
+                            <span class="text-[11px] text-sante-600 font-extrabold">50%</span>
+                        </button>
+                        <button onclick="setMarginPreset(80)" id="btnMargin80" class="margin-preset-btn py-2 px-1 rounded-xl border border-slate-200 text-xs font-bold text-slate-600 hover:bg-slate-50 transition flex flex-col items-center">
+                            <span>Max Cuan</span>
+                            <span class="text-[11px] text-sante-600 font-extrabold">80%</span>
+                        </button>
+                    </div>
+                </section>
+
+                <!-- SECTION 5: HASIL PERHITUNGAN HPP & REKOMENDASI HARGA JUAL -->
+                <section class="bg-gradient-to-br from-slate-900 via-slate-800 to-emerald-950 text-white rounded-3xl p-5 shadow-xl space-y-4 relative overflow-hidden">
+                    <div class="absolute -right-8 -top-8 w-32 h-32 rounded-full bg-emerald-500/10 blur-xl pointer-events-none"></div>
+
+                    <div class="flex items-center justify-between border-b border-white/10 pb-3">
+                        <div>
+                            <span class="text-[10px] font-bold uppercase tracking-widest text-emerald-400">Hasil Kalkulasi Real-Time</span>
+                            <h3 id="resultProductName" class="font-extrabold text-base text-white truncate max-w-[230px]">Produk UMKM</h3>
+                        </div>
+                        <span id="resultBatchInfo" class="text-xs bg-white/10 px-2.5 py-1 rounded-lg font-semibold text-emerald-200">1 Porsi</span>
+                    </div>
+
+                    <!-- Primary Cards: HPP vs Harga Jual -->
+                    <div class="grid grid-cols-2 gap-3">
+                        <div class="bg-white/10 backdrop-blur-sm rounded-2xl p-3.5 border border-white/10">
+                            <p class="text-[11px] text-slate-300 font-medium">HPP (Modal) / <span class="unit-label">Unit</span></p>
+                            <p id="resHppPerUnit" class="text-lg font-extrabold text-white mt-1">Rp 0</p>
+                            <p class="text-[10px] text-slate-400 mt-1">Total Batch: <span id="resTotalBatchCost" class="font-semibold text-slate-200">Rp 0</span></p>
+                        </div>
+
+                        <div class="bg-gradient-to-br from-emerald-500 to-sante-600 rounded-2xl p-3.5 shadow-lg shadow-emerald-600/30 border border-emerald-400/40">
+                            <div class="flex items-center justify-between">
+                                <p class="text-[11px] text-emerald-50 font-semibold">Rekomendasi Jual</p>
+                                <i class="fa-solid fa-tag text-xs text-amber-300"></i>
+                            </div>
+                            <p id="resSellingPrice" class="text-xl font-extrabold text-white mt-1">Rp 0</p>
+                            <p class="text-[10px] text-emerald-100 mt-1">Dibulatkan rapi per <span class="unit-label">Unit</span></p>
+                        </div>
+                    </div>
+
+                    <!-- Profit Breakdown -->
+                    <div class="bg-slate-950/50 rounded-2xl p-3.5 border border-white/5 space-y-2 text-xs">
+                        <div class="flex justify-between items-center">
+                            <span class="text-slate-300">Cuan Bersih per <span class="unit-label">Unit</span>:</span>
+                            <span id="resProfitPerUnit" class="font-extrabold text-emerald-400 text-sm">+ Rp 0</span>
+                        </div>
+                        <div class="flex justify-between items-center">
+                            <span class="text-slate-300">Total Omzet (1 Batch Habis):</span>
+                            <span id="resTotalRevenue" class="font-bold text-white">Rp 0</span>
+                        </div>
+                        <div class="flex justify-between items-center pt-1.5 border-t border-white/10">
+                            <span class="text-amber-300 font-bold">Total Laba Bersih (1 Batch):</span>
+                            <span id="resTotalBatchProfit" class="font-extrabold text-amber-300 text-base">+ Rp 0</span>
+                        </div>
+                    </div>
+
+                    <!-- Action Buttons -->
+                    <div class="grid grid-cols-2 gap-2.5 pt-1">
+                        <button onclick="saveCalculationToHistory()" class="bg-white hover:bg-slate-100 active:scale-95 text-slate-900 font-extrabold text-xs py-3 px-4 rounded-xl flex items-center justify-center gap-2 shadow-md transition">
+                            <i class="fa-solid fa-bookmark text-sante-600"></i>
+                            <span>Simpan HPP</span>
+                        </button>
+                        <button onclick="copySummaryText()" class="bg-white/15 hover:bg-white/25 active:scale-95 text-white font-bold text-xs py-3 px-4 rounded-xl flex items-center justify-center gap-2 border border-white/15 transition">
+                            <i class="fa-solid fa-share-nodes"></i>
+                            <span>Salin Rincian</span>
+                        </button>
+                    </div>
+                </section>
+
+            </div>
+
+            <!-- TAB 2: RIWAYAT SIMPANAN -->
+            <div id="tabHistory" class="hidden space-y-4">
+                <div class="bg-white rounded-3xl p-4 shadow-sm border border-slate-200/80">
+                    <div class="flex items-center justify-between mb-3">
+                        <div>
+                            <h2 class="font-extrabold text-base text-slate-800">Riwayat Perhitungan HPP</h2>
+                            <p class="text-xs text-slate-500">Klik produk untuk memuat atau mengedit kembali</p>
+                        </div>
+                        <button onclick="clearAllHistory()" class="text-xs text-rose-600 hover:underline font-semibold">
+                            Hapus Semua
+                        </button>
+                    </div>
+
+                    <div id="historyContainer" class="space-y-2.5"></div>
+                </div>
+            </div>
+
+        </main>
+
+        <!-- Bottom Navigation Bar -->
+        <nav class="absolute bottom-0 inset-x-0 bg-white/95 backdrop-blur-md border-t border-slate-200 px-6 py-2 flex justify-around items-center z-20">
+            <button onclick="switchTab('calculator')" id="navBtnCalc" class="flex flex-col items-center py-1 px-4 rounded-xl text-sante-600 font-bold transition">
+                <i class="fa-solid fa-calculator text-lg mb-0.5"></i>
+                <span class="text-[11px]">Kalkulator HPP</span>
+            </button>
+
+            <!-- Center Floating Scan Button -->
+            <button onclick="triggerQuickCamera()" class=" -mt-7 w-14 h-14 rounded-full bg-gradient-to-tr from-sante-700 to-emerald-500 text-white shadow-lg shadow-emerald-600/40 border-4 border-white flex flex-col items-center justify-center active:scale-95 transition">
+                <i class="fa-solid fa-camera text-lg"></i>
+            </button>
+
+            <button onclick="switchTab('history')" id="navBtnHistory" class="flex flex-col items-center py-1 px-4 rounded-xl text-slate-400 font-semibold transition relative">
+                <i class="fa-solid fa-clock-rotate-left text-lg mb-0.5"></i>
+                <span class="text-[11px]">Tersimpan</span>
+                <span id="historyCountBadge" class="hidden absolute top-0.5 right-3 bg-amber-400 text-slate-900 font-extrabold text-[10px] w-4 h-4 rounded-full flex items-center justify-center">0</span>
+            </button>
+        </nav>
+
+    </div>
+
+    <script>
+        // ==========================================
+        // STATE MANAGEMENT & INITIAL PRESETS
+        // ==========================================
+        const apiKey = ""; // Otomatis diisi oleh environment saat runtime
+
+        let appState = {
+            productName: "Es Kopi Susu Gula Aren",
+            batchYield: 10,
+            unitName: "Cup / Porsi",
+            marginPercent: 45,
+            materials: [
+                { id: 1, name: "Biji Kopi Espresso (200gr)", cost: 32000 },
+                { id: 2, name: "Susu UHT Full Cream (1.5 Liter)", cost: 28500 },
+                { id: 3, name: "Gula Aren Cair Organik (250ml)", cost: 12000 },
+                { id: 4, name: "Es Batu Kristal (1 plastik)", cost: 5000 }
+            ],
+            packaging: [
+                { id: 101, name: "Cup Plastik 16oz + Tutup (10 pcs)", cost: 8500 },
+                { id: 102, name: "Sedotan Steril & Stiker Brand (10 pcs)", cost: 3500 }
+            ],
+            overhead: [
+                { id: 201, name: "Listrik Mesin Kopi & Kulkas", cost: 4000 },
+                { id: 202, name: "Tenaga Barista / Pembuatan", cost: 10000 }
+            ]
+        };
+
+        const PRESETS = {
+            kopi: {
+                productName: "Es Kopi Susu Gula Aren",
+                batchYield: 10,
+                unitName: "Cup / Porsi",
+                marginPercent: 45,
+                insight: "Estimasi resep untuk 10 cup ukuran 16oz. Sudah termasuk bahan baku kopi, susu, cup tebal, dan listrik.",
+                materials: [
+                    { id: 1, name: "Biji Kopi Espresso (200gr)", cost: 32000 },
+                    { id: 2, name: "Susu UHT Full Cream (1.5 Liter)", cost: 28500 },
+                    { id: 3, name: "Gula Aren Cair (250ml)", cost: 12000 },
+                    { id: 4, name: "Es Batu Kristal", cost: 5000 }
+                ],
+                packaging: [
+                    { id: 101, name: "Cup Injection 16oz + Lid (10 pcs)", cost: 9000 },
+                    { id: 102, name: "Sedotan + Kantong Takeaway (10 pcs)", cost: 3500 }
+                ],
+                overhead: [
+                    { id: 201, name: "Listrik & Air (1 Batch)", cost: 3500 },
+                    { id: 202, name: "Upah Seduh / Operasional", cost: 10000 }
+                ]
+            },
+            ricebowl: {
+                productName: "Rice Bowl Ayam Teriyaki Crispy",
+                batchYield: 5,
+                unitName: "Cup / Porsi",
+                marginPercent: 40,
+                insight: "Simulasi 5 porsi Rice Bowl lengkap dengan telur, sayur, dan kemasan paper bowl tahan panas.",
+                materials: [
+                    { id: 1, name: "Dada Ayam Fillet (500gr)", cost: 28000 },
+                    { id: 2, name: "Beras Pulen + Bumbu Nasi (5 porsi)", cost: 10000 },
+                    { id: 3, name: "Tepung Crispy, Saus Teriyaki & Bawang", cost: 14000 },
+                    { id: 4, name: "Telur Ayam (5 butir) & Sayur Selada", cost: 13000 },
+                    { id: 5, name: "Minyak Goreng (Pemakaian 5 porsi)", cost: 6000 }
+                ],
+                packaging: [
+                    { id: 101, name: "Paper Bowl 650ml + Tutup (5 pcs)", cost: 7500 },
+                    { id: 102, name: "Sendok Plastik & Tisu (5 set)", cost: 2000 }
+                ],
+                overhead: [
+                    { id: 201, name: "Gas LPG & Listrik", cost: 4500 },
+                    { id: 202, name: "Tenaga Masak (5 porsi)", cost: 10000 }
+                ]
+            },
+            brownies: {
+                productName: "Fudgy Brownies Sekat Panggang",
+                batchYield: 4,
+                unitName: "Box / Kotak",
+                marginPercent: 50,
+                insight: "1 Adonan menghasilkan 4 loyang/box ukuran 20x10cm dengan topping premium.",
+                materials: [
+                    { id: 1, name: "Dark Cooking Chocolate (400gr)", cost: 34000 },
+                    { id: 2, name: "Butter / Margarin & Minyak (300gr)", cost: 22000 },
+                    { id: 3, name: "Telur Ayam (6 butir) & Gula Halus", cost: 21000 },
+                    { id: 4, name: "Tepung Terigu & Coklat Bubuk", cost: 15000 },
+                    { id: 5, name: "Topping Almond, ChocoChip & Keju", cost: 16000 }
+                ],
+                packaging: [
+                    { id: 101, name: "Box Brownies Kraft + Baking Paper (4 pcs)", cost: 14000 },
+                    { id: 102, name: "Stiker Segel & Pita (4 set)", cost: 4000 }
+                ],
+                overhead: [
+                    { id: 201, name: "Gas Oven / Listrik Panggang (45 menit)", cost: 8000 },
+                    { id: 202, name: "Tenaga Pembuatan & Cuci Alat", cost: 16000 }
+                ]
+            },
+            totebag: {
+                productName: "Totebag Kanvas Sablon DTF Custom",
+                batchYield: 12,
+                unitName: "Pcs / Buah",
+                marginPercent: 50,
+                insight: "Produksi 1 lusin (12 pcs) Totebag bahan kanvas tebal dengan resleting dan sablon DTF ukuran A4.",
+                materials: [
+                    { id: 1, name: "Totebag Kanvas Polos + Resleting (12 pcs)", cost: 180000 },
+                    { id: 2, name: "Print Film Sablon DTF A4 (12 lembar)", cost: 108000 }
+                ],
+                packaging: [
+                    { id: 101, name: "Plastik Ziplock Matte + Hangtag (12 pcs)", cost: 24000 },
+                    { id: 102, name: "Thank You Card & Polymailer", cost: 12000 }
+                ],
+                overhead: [
+                    { id: 201, name: "Listrik Mesin Heat Press (12 pcs)", cost: 12000 },
+                    { id: 202, name: "Tenaga Press & Packing", cost: 24000 }
+                ]
+            }
+        };
+
+        let savedHistory = [];
+
+        // ==========================================
+        // INITIALIZATION
+        // ==========================================
+        window.onload = function() {
+            loadHistoryFromStorage();
+            renderStateToUI();
+            recalculateAll();
+        };
+
+        function formatRupiah(num) {
+            const cleanNum = Math.round(Number(num) || 0);
+            return "Rp " + cleanNum.toLocaleString('id-ID');
+        }
+
+        function showToast(message, type = "success") {
+            const toastBox = document.getElementById("toastBox");
+            const toastIcon = document.getElementById("toastIcon");
+            const toastText = document.getElementById("toastText");
+
+            toastText.textContent = message;
+            if (type === "error") {
+                toastIcon.className = "fa-solid fa-triangle-exclamation text-rose-400 text-base";
+            } else if (type === "info") {
+                toastIcon.className = "fa-solid fa-wand-magic-sparkles text-amber-300 text-base";
+            } else {
+                toastIcon.className = "fa-solid fa-circle-check text-emerald-400 text-base";
+            }
+
+            toastBox.classList.remove("opacity-0", "-translate-y-3");
+            toastBox.classList.add("opacity-100", "translate-y-0");
+
+            setTimeout(() => {
+                toastBox.classList.remove("opacity-100", "translate-y-0");
+                toastBox.classList.add("opacity-0", "-translate-y-3");
+            }, 3200);
+        }
+
+        // ==========================================
+        // RENDER DYNAMIC LISTS & UI
+        // ==========================================
+        function renderStateToUI() {
+            document.getElementById("productName").value = appState.productName;
+            document.getElementById("batchYield").value = appState.batchYield;
+            document.getElementById("unitName").value = appState.unitName;
+            document.getElementById("marginSlider").value = appState.marginPercent;
+            document.getElementById("marginValueBadge").textContent = `Markup +${appState.marginPercent}%`;
+
+            renderCategoryList("materials", "materialsList");
+            renderCategoryList("packaging", "packagingList");
+            renderCategoryList("overhead", "overheadList");
+            highlightActiveMarginButton(appState.marginPercent);
+        }
+
+        function renderCategoryList(categoryKey, containerId) {
+            const container = document.getElementById(containerId);
+            container.innerHTML = "";
+
+            appState[categoryKey].forEach((item, index) => {
+                const row = document.createElement("div");
+                row.className = "flex items-center gap-2 bg-slate-50 p-2 rounded-xl border border-slate-200/80";
+                row.innerHTML = `
+                    <input type="text" value="${escapeHtml(item.name)}" placeholder="Nama komponen..."
+                        oninput="updateCostItem('${categoryKey}', ${index}, 'name', this.value)"
+                        class="flex-1 bg-transparent text-xs font-semibold text-slate-700 focus:outline-none px-1.5">
+                    <div class="flex items-center bg-white border border-slate-200 rounded-lg px-2 py-1.5 w-32 shrink-0">
+                        <span class="text-[11px] font-bold text-slate-400 mr-1">Rp</span>
+                        <input type="number" min="0" step="500" value="${item.cost}"
+                            oninput="updateCostItem('${categoryKey}', ${index}, 'cost', this.value)"
+                            class="w-full bg-transparent text-xs font-extrabold text-slate-800 text-right focus:outline-none">
+                    </div>
+                    <button onclick="removeCostItem('${categoryKey}', ${index})" title="Hapus"
+                        class="w-7 h-7 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 flex items-center justify-center transition shrink-0">
+                        <i class="fa-solid fa-trash-can text-xs"></i>
+                    </button>
+                `;
+                container.appendChild(row);
+            });
+        }
+
+        function escapeHtml(str) {
+            return String(str || "")
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;")
+                .replace(/"/g, "&quot;");
+        }
+
+        function updateCostItem(categoryKey, index, field, value) {
+            if (field === "cost") {
+                appState[categoryKey][index].cost = Math.max(0, Number(value) || 0);
+            } else {
+                appState[categoryKey][index].name = value;
+            }
+            recalculateAll();
+        }
+
+        function addCostItem(categoryKey) {
+            const placeholders = {
+                materials: "Bahan Baku Baru",
+                packaging: "Kemasan / Stiker",
+                overhead: "Biaya Operasional"
+            };
+            appState[categoryKey].push({
+                id: Date.now(),
+                name: placeholders[categoryKey],
+                cost: 5000
+            });
+            renderCategoryList(categoryKey, categoryKey + "List");
+            recalculateAll();
+        }
+
+        function removeCostItem(categoryKey, index) {
+            appState[categoryKey].splice(index, 1);
+            renderCategoryList(categoryKey, categoryKey + "List");
+            recalculateAll();
+        }
+
+        function adjustBatchQty(delta) {
+            const input = document.getElementById("batchYield");
+            let current = parseInt(input.value, 10) || 1;
+            current = Math.max(1, current + delta);
+            input.value = current;
+            recalculateAll();
+        }
+
+        function syncMarginSlider(val) {
+            appState.marginPercent = Number(val);
+            document.getElementById("marginValueBadge").textContent = `Markup +${val}%`;
+            highlightActiveMarginButton(Number(val));
+            recalculateAll();
+        }
+
+        function setMarginPreset(val) {
+            document.getElementById("marginSlider").value = val;
+            syncMarginSlider(val);
+        }
+
+        function highlightActiveMarginButton(val) {
+            document.querySelectorAll(".margin-preset-btn").forEach(btn => {
+                btn.classList.remove("bg-emerald-50", "border-sante-500", "ring-2", "ring-sante-500/20");
+                btn.classList.add("border-slate-200");
+            });
+            const activeBtn = document.getElementById("btnMargin" + val);
+            if (activeBtn) {
+                activeBtn.classList.remove("border-slate-200");
+                activeBtn.classList.add("bg-emerald-50", "border-sante-500", "ring-2", "ring-sante-500/20");
+            }
+        }
+
+        // ==========================================
+        // CORE REAL-TIME HPP CALCULATION
+        // ==========================================
+        function recalculateAll() {
+            appState.productName = document.getElementById("productName").value || "Produk UMKM";
+            appState.batchYield = Math.max(1, parseInt(document.getElementById("batchYield").value, 10) || 1);
+            appState.unitName = document.getElementById("unitName").value;
+
+            const sumMaterials = appState.materials.reduce((acc, item) => acc + (Number(item.cost) || 0), 0);
+            const sumPackaging = appState.packaging.reduce((acc, item) => acc + (Number(item.cost) || 0), 0);
+            const sumOverhead = appState.overhead.reduce((acc, item) => acc + (Number(item.cost) || 0), 0);
+
+            const totalBatchCost = sumMaterials + sumPackaging + sumOverhead;
+            const hppPerUnit = totalBatchCost / appState.batchYield;
+
+            // Hitung harga jual dengan markup dan bulatkan ke ratusan/ribuan terdekat yang rapi
+            const rawSellingPrice = hppPerUnit * (1 + appState.marginPercent / 100);
+            const roundedSellingPrice = smartRoundPrice(rawSellingPrice);
+
+            const profitPerUnit = Math.max(0, roundedSellingPrice - hppPerUnit);
+            const totalRevenue = roundedSellingPrice * appState.batchYield;
+            const totalBatchProfit = profitPerUnit * appState.batchYield;
+
+            // Update Subtotals
+            document.getElementById("subtotalMaterials").textContent = formatRupiah(sumMaterials);
+            document.getElementById("subtotalPackaging").textContent = formatRupiah(sumPackaging);
+            document.getElementById("subtotalOverhead").textContent = formatRupiah(sumOverhead);
+            document.getElementById("totalCostBadge").textContent = formatRupiah(totalBatchCost);
+
+            // Update Result Card
+            const shortUnit = appState.unitName.split("/")[0].trim();
+            document.querySelectorAll(".unit-label").forEach(el => el.textContent = shortUnit);
+
+            document.getElementById("resultProductName").textContent = appState.productName;
+            document.getElementById("resultBatchInfo").textContent = `${appState.batchYield} ${shortUnit} / Batch`;
+            document.getElementById("resHppPerUnit").textContent = formatRupiah(hppPerUnit);
+            document.getElementById("resTotalBatchCost").textContent = formatRupiah(totalBatchCost);
+            document.getElementById("resSellingPrice").textContent = formatRupiah(roundedSellingPrice);
+            document.getElementById("resProfitPerUnit").textContent = "+ " + formatRupiah(profitPerUnit);
+            document.getElementById("resTotalRevenue").textContent = formatRupiah(totalRevenue);
+            document.getElementById("resTotalBatchProfit").textContent = "+ " + formatRupiah(totalBatchProfit);
+        }
+
+        function smartRoundPrice(price) {
+            if (price <= 0) return 0;
+            if (price < 5000) {
+                return Math.ceil(price / 100) * 100;
+            } else if (price < 50000) {
+                return Math.ceil(price / 500) * 500;
+            } else {
+                return Math.ceil(price / 1000) * 1000;
+            }
+        }
+
+        // ==========================================
+        // LOAD PRESET / SIMULATION
+        // ==========================================
+        function loadPreset(presetKey) {
+            const preset = PRESETS[presetKey];
+            if (!preset) return;
+
+            appState = JSON.parse(JSON.stringify(preset));
+            
+            // Reset preview image state to empty
+            document.getElementById("emptyScanState").classList.remove("hidden");
+            document.getElementById("previewScanState").classList.add("hidden");
+
+            // Show AI Insight box
+            const insightBox = document.getElementById("aiInsightBox");
+            document.getElementById("aiInsightText").textContent = preset.insight;
+            insightBox.classList.remove("hidden");
+
+            renderStateToUI();
+            recalculateAll();
+            showToast(`Simulasi "${preset.productName}" berhasil dimuat!`, "info");
+        }
+
+        function resetCalculator() {
+            appState = {
+                productName: "Produk Baru",
+                batchYield: 1,
+                unitName: "Pcs / Buah",
+                marginPercent: 35,
+                materials: [{ id: Date.now(), name: "Bahan Utama", cost: 10000 }],
+                packaging: [{ id: Date.now() + 1, name: "Kemasan", cost: 2000 }],
+                overhead: [{ id: Date.now() + 2, name: "Listrik / Operasional", cost: 1500 }]
+            };
+            document.getElementById("emptyScanState").classList.remove("hidden");
+            document.getElementById("previewScanState").classList.add("hidden");
+            document.getElementById("aiInsightBox").classList.add("hidden");
+            renderStateToUI();
+            recalculateAll();
+            showToast("Kalkulator direset ke awal.");
+        }
+
+        // ==========================================
+        // GEMINI VISION API: SCAN IMAGE TO HPP
+        // ==========================================
+        function triggerQuickCamera() {
+            switchTab('calculator');
+            document.getElementById('cameraInput').click();
+        }
+
+        async function handleImageUpload(event) {
+            const file = event.target.files?.[0];
+            if (!file) return;
+
+            try {
+                // Compress & convert image to Base64
+                const { base64Data, dataUrl, mimeType } = await compressAndReadImage(file);
+
+                // Show image preview & scanner animation
+                document.getElementById("emptyScanState").classList.add("hidden");
+                document.getElementById("previewScanState").classList.remove("hidden");
+                document.getElementById("uploadedImagePreview").src = dataUrl;
+                document.getElementById("scannerOverlay").classList.remove("hidden");
+                document.getElementById("aiSuccessBadge").classList.add("hidden");
+
+                // Call Gemini API
+                const aiResult = await analyzeProductImageWithGemini(base64Data, mimeType);
+
+                // Populate State with AI Response
+                if (aiResult) {
+                    appState.productName = aiResult.productName || "Produk Hasil Scan";
+                    appState.batchYield = Math.max(1, Number(aiResult.batchYield) || 1);
+                    
+                    // Match unitName or default
+                    const validUnits = ["Cup / Porsi", "Pcs / Buah", "Box / Kotak", "Bungkus / Pack", "Botol"];
+                    appState.unitName = validUnits.includes(aiResult.unitName) ? aiResult.unitName : "Pcs / Buah";
+                    appState.marginPercent = Number(aiResult.recommendedMargin) || 40;
+
+                    appState.materials = (aiResult.materials || []).map((m, i) => ({
+                        id: Date.now() + i,
+                        name: m.name,
+                        cost: Number(m.cost) || 0
+                    }));
+                    appState.packaging = (aiResult.packaging || []).map((p, i) => ({
+                        id: Date.now() + 100 + i,
+                        name: p.name,
+                        cost: Number(p.cost) || 0
+                    }));
+                    appState.overhead = (aiResult.overhead || []).map((o, i) => ({
+                        id: Date.now() + 200 + i,
+                        name: o.name,
+                        cost: Number(o.cost) || 0
+                    }));
+
+                    const insightBox = document.getElementById("aiInsightBox");
+                    document.getElementById("aiInsightText").textContent = aiResult.summaryInsight || "Komponen HPP berhasil diestimasi secara otomatis dari foto produkmu.";
+                    insightBox.classList.remove("hidden");
+
+                    renderStateToUI();
+                    recalculateAll();
+                    showToast(`Berhasil menganalisis: ${appState.productName}`, "success");
+                }
+            } catch (err) {
+                showToast("Gagal menganalisis foto. Silakan coba lagi atau gunakan contoh simulasi.", "error");
+            } finally {
+                document.getElementById("scannerOverlay").classList.add("hidden");
+                document.getElementById("aiSuccessBadge").classList.remove("hidden");
+                event.target.value = "";
+            }
+        }
+
+        function compressAndReadImage(file) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const img = new Image();
+                    img.onload = function() {
+                        const canvas = document.createElement("canvas");
+                        const maxDim = 900;
+                        let width = img.width;
+                        let height = img.height;
+
+                        if (width > height && width > maxDim) {
+                            height = Math.round((height * maxDim) / width);
+                            width = maxDim;
+                        } else if (height > maxDim) {
+                            width = Math.round((width * maxDim) / height);
+                            height = maxDim;
+                        }
+
+                        canvas.width = width;
+                        canvas.height = height;
+                        const ctx = canvas.getContext("2d");
+                        ctx.drawImage(img, 0, 0, width, height);
+
+                        const mimeType = "image/jpeg";
+                        const dataUrl = canvas.toDataURL(mimeType, 0.82);
+                        const base64Data = dataUrl.split(",")[1];
+                        resolve({ base64Data, dataUrl, mimeType });
+                    };
+                    img.onerror = reject;
+                    img.src = e.target.result;
+                };
+                reader.onerror = reject;
+                reader.readAsDataURL(file);
+            });
+        }
+
+        async function analyzeProductImageWithGemini(base64ImageData, mimeType) {
+            const prompt = `Kamu adalah konsultan ahli UMKM dan analis Harga Pokok Produksi (HPP) di Indonesia.
+Analisis foto barang/makanan/minuman/kerajinan ini.
+Identifikasi nama barang tersebut, tentukan estimasi ukuran 1 batch produksi wajar untuk UMKM (misal 1 porsi atau 10 porsi), dan buatkan daftar lengkap rincian:
+1. Bahan baku utama (materials) beserta takaran singkat dan estimasi biaya wajar dalam Rupiah (IDR) untuk 1 batch tersebut.
+2. Kemasan / packaging beserta estimasi biaya dalam Rupiah (IDR) untuk 1 batch tersebut.
+3. Biaya operasional / tenaga / listrik / gas (overhead) dalam Rupiah (IDR) untuk 1 batch tersebut.
+Berikan angka harga pasar Indonesia yang realistis.`;
+
+            const payload = {
+                contents: [
+                    {
+                        role: "user",
+                        parts: [
+                            { text: prompt },
+                            {
+                                inlineData: {
+                                    mimeType: mimeType,
+                                    data: base64ImageData
+                                }
+                            }
+                        ]
+                    }
+                ],
+                generationConfig: {
+                    responseMimeType: "application/json",
+                    responseSchema: {
+                        type: "OBJECT",
+                        properties: {
+                            productName: { type: "STRING" },
+                            batchYield: { type: "INTEGER" },
+                            unitName: { 
+                                type: "STRING",
+                                enum: ["Cup / Porsi", "Pcs / Buah", "Box / Kotak", "Bungkus / Pack", "Botol"]
+                            },
+                            recommendedMargin: { type: "INTEGER" },
+                            summaryInsight: { type: "STRING" },
+                            materials: {
+                                type: "ARRAY",
+                                items: {
+                                    type: "OBJECT",
+                                    properties: {
+                                        name: { type: "STRING" },
+                                        cost: { type: "INTEGER" }
+                                    },
+                                    required: ["name", "cost"]
+                                }
+                            },
+                            packaging: {
+                                type: "ARRAY",
+                                items: {
+                                    type: "OBJECT",
+                                    properties: {
+                                        name: { type: "STRING" },
+                                        cost: { type: "INTEGER" }
+                                    },
+                                    required: ["name", "cost"]
+                                }
+                            },
+                            overhead: {
+                                type: "ARRAY",
+                                items: {
+                                    type: "OBJECT",
+                                    properties: {
+                                        name: { type: "STRING" },
+                                        cost: { type: "INTEGER" }
+                                    },
+                                    required: ["name", "cost"]
+                                }
+                            }
+                        },
+                        required: ["productName", "batchYield", "unitName", "recommendedMargin", "summaryInsight", "materials", "packaging", "overhead"]
+                    }
+                }
+            };
+
+            const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key=${apiKey}`;
+
+            // Exponential Backoff Fetch
+            let delay = 1000;
+            for (let attempt = 0; attempt < 4; attempt++) {
+                try {
+                    const response = await fetch(apiUrl, {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify(payload)
+                    });
+
+                    if (!response.ok) {
+                        throw new Error(`HTTP Status ${response.status}`);
+                    }
+
+                    const result = await response.json();
+                    const text = result?.candidates?.[0]?.content?.parts?.[0]?.text;
+                    if (text) {
+                        return JSON.parse(text);
+                    }
+                    throw new Error("Empty AI response");
+                } catch (err) {
+                    if (attempt === 3) throw err;
+                    await new Promise(r => setTimeout(r, delay));
+                    delay *= 2;
+                }
+            }
+        }
+
+        // ==========================================
+        // HISTORY & CLIPBOARD SHARE
+        // ==========================================
+        function saveCalculationToHistory() {
+            const sumMaterials = appState.materials.reduce((a, b) => a + (Number(b.cost) || 0), 0);
+            const sumPackaging = appState.packaging.reduce((a, b) => a + (Number(b.cost) || 0), 0);
+            const sumOverhead = appState.overhead.reduce((a, b) => a + (Number(b.cost) || 0), 0);
+            const totalBatchCost = sumMaterials + sumPackaging + sumOverhead;
+            const hppPerUnit = totalBatchCost / appState.batchYield;
+            const sellingPrice = smartRoundPrice(hppPerUnit * (1 + appState.marginPercent / 100));
+
+            const record = {
+                id: Date.now(),
+                timestamp: new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }),
+                hppPerUnit: Math.round(hppPerUnit),
+                sellingPrice: sellingPrice,
+                stateSnapshot: JSON.parse(JSON.stringify(appState))
+            };
+
+            savedHistory.unshift(record);
+            persistHistory();
+            renderHistoryList();
+            showToast(`HPP "${appState.productName}" berhasil disimpan!`);
+        }
+
+        function loadHistoryFromStorage() {
+            try {
+                const raw = localStorage.getItem("sante_scale_hpp_history");
+                if (raw) {
+                    savedHistory = JSON.parse(raw);
+                }
+            } catch (e) {
+                savedHistory = [];
+            }
+            renderHistoryList();
+        }
+
+        function persistHistory() {
+            try {
+                localStorage.setItem("sante_scale_hpp_history", JSON.stringify(savedHistory));
+            } catch (e) {}
+        }
+
+        function renderHistoryList() {
+            const container = document.getElementById("historyContainer");
+            const badge = document.getElementById("historyCountBadge");
+
+            if (savedHistory.length > 0) {
+                badge.textContent = savedHistory.length;
+                badge.classList.remove("hidden");
+            } else {
+                badge.classList.add("hidden");
+            }
+
+            if (savedHistory.length === 0) {
+                container.innerHTML = `
+                    <div class="text-center py-10 text-slate-400">
+                        <i class="fa-solid fa-folder-open text-3xl mb-2"></i>
+                        <p class="text-xs font-semibold">Belum ada perhitungan yang disimpan.</p>
+                        <p class="text-[11px] mt-0.5">Klik tombol "Simpan HPP" pada hasil kalkulator.</p>
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = "";
+            savedHistory.forEach((item, idx) => {
+                const card = document.createElement("div");
+                card.className = "bg-slate-50 hover:bg-emerald-50/50 border border-slate-200 rounded-2xl p-3.5 flex items-center justify-between transition cursor-pointer";
+                card.onclick = () => restoreHistoryItem(idx);
+                card.innerHTML = `
+                    <div class="space-y-1 pr-2">
+                        <div class="flex items-center gap-2">
+                            <h4 class="font-bold text-sm text-slate-800">${escapeHtml(item.stateSnapshot.productName)}</h4>
+                            <span class="text-[10px] bg-slate-200 text-slate-600 px-2 py-0.5 rounded-full font-semibold">${item.timestamp}</span>
+                        </div>
+                        <div class="flex items-center gap-3 text-xs">
+                            <span class="text-slate-500">HPP: <strong class="text-slate-700">${formatRupiah(item.hppPerUnit)}</strong></span>
+                            <span class="text-sante-600">Jual: <strong>${formatRupiah(item.sellingPrice)}</strong></span>
+                        </div>
+                    </div>
+                    <button onclick="event.stopPropagation(); deleteHistoryItem(${idx})" class="w-8 h-8 rounded-xl text-slate-400 hover:text-rose-600 hover:bg-rose-50 flex items-center justify-center">
+                        <i class="fa-solid fa-trash-can text-xs"></i>
+                    </button>
+                `;
+                container.appendChild(card);
+            });
+        }
+
+        function restoreHistoryItem(index) {
+            const item = savedHistory[index];
+            if (!item) return;
+            appState = JSON.parse(JSON.stringify(item.stateSnapshot));
+            renderStateToUI();
+            recalculateAll();
+            switchTab('calculator');
+            showToast(`Memuat "${appState.productName}"`);
+        }
+
+        function deleteHistoryItem(index) {
+            savedHistory.splice(index, 1);
+            persistHistory();
+            renderHistoryList();
+            showToast("Riwayat dihapus.");
+        }
+
+        function clearAllHistory() {
+            savedHistory = [];
+            persistHistory();
+            renderHistoryList();
+            showToast("Semua riwayat dibersihkan.");
+        }
+
+        function copySummaryText() {
+            const hppText = document.getElementById("resHppPerUnit").textContent;
+            const sellText = document.getElementById("resSellingPrice").textContent;
+            const profitText = document.getElementById("resProfitPerUnit").textContent;
+            const batchProfitText = document.getElementById("resTotalBatchProfit").textContent;
+
+            const summary = `📊 *RINCIAN HPP SANTE SCALE AI*
+📦 Produk: *${appState.productName}*
+🔢 Output Batch: ${appState.batchYield} ${appState.unitName}
+
+💰 *HPP (Modal) / Unit:* ${hppText}
+🏷️ *Rekomendasi Harga Jual:* ${sellText} (Markup +${appState.marginPercent}%)
+✨ *Laba Bersih / Unit:* ${profitText}
+🚀 *Total Laba 1 Batch:* ${batchProfitText}`;
+
+            const textArea = document.createElement("textarea");
+            textArea.value = summary;
+            document.body.appendChild(textArea);
+            textArea.select();
+            document.execCommand("copy");
+            document.body.removeChild(textArea);
+
+            showToast("Rincian HPP berhasil disalin ke clipboard!");
+        }
+
+        // ==========================================
+        // NAVIGATION TABS
+        // ==========================================
+        function switchTab(tabName) {
+            const calcView = document.getElementById("tabCalculator");
+            const histView = document.getElementById("tabHistory");
+            const btnCalc = document.getElementById("navBtnCalc");
+            const btnHist = document.getElementById("navBtnHistory");
+
+            if (tabName === "calculator") {
+                calcView.classList.remove("hidden");
+                histView.classList.add("hidden");
+                btnCalc.className = "flex flex-col items-center py-1 px-4 rounded-xl text-sante-600 font-bold transition";
+                btnHist.className = "flex flex-col items-center py-1 px-4 rounded-xl text-slate-400 font-semibold transition relative";
+            } else {
+                calcView.classList.add("hidden");
+                histView.classList.remove("hidden");
+                btnHist.className = "flex flex-col items-center py-1 px-4 rounded-xl text-sante-600 font-bold transition relative";
+                btnCalc.className = "flex flex-col items-center py-1 px-4 rounded-xl text-slate-400 font-semibold transition";
+            }
+            document.getElementById("mainScroll").scrollTo({ top: 0, behavior: "smooth" });
+        }
+    </script>
+</body>
+</html>
+```
