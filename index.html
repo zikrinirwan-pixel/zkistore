@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>CuanEarn - Aplikasi Penghasil Saldo</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Roboto, sans-serif; }
+    body {
+      background-color: #0f172a;
+      color: #f8fafc;
+      padding-bottom: 75px;
+    }
+
+    /* Header Saldo */
+    header {
+      background: linear-gradient(135deg, #1e293b, #0f172a);
+      padding: 20px 15px;
+      text-align: center;
+      border-bottom: 1px solid #334155;
+    }
+    .wallet-card {
+      background: linear-gradient(135deg, #2563eb, #1d4ed8);
+      border-radius: 16px;
+      padding: 20px;
+      margin-top: 10px;
+      box-shadow: 0 10px 25px rgba(37, 99, 235, 0.4);
+    }
+    .wallet-title { font-size: 13px; color: #bfdbfe; text-transform: uppercase; letter-spacing: 1px; }
+    .coin-count { font-size: 32px; font-weight: 900; color: #fff; margin: 5px 0; }
+    .rupiah-eq { font-size: 13px; color: #93c5fd; }
+
+    .container { padding: 15px; max-width: 500px; margin: auto; }
+    .tab-content { display: none; }
+    .tab-content.active { display: block; }
+
+    /* Kartu Misi & Menu */
+    .card {
+      background: #1e293b;
+      border: 1px solid #334155;
+      border-radius: 12px;
+      padding: 15px;
+      margin-bottom: 12px;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.2);
+    }
+    .card h3 { font-size: 15px; color: #38bdf8; margin-bottom: 6px; }
+    .card p { font-size: 13px; color: #94a3b8; margin-bottom: 12px; }
+
+    .btn {
+      width: 100%;
+      padding: 11px;
+      border: none;
+      border-radius: 8px;
+      background: #2563eb;
+      color: white;
+      font-weight: bold;
+      font-size: 14px;
+      cursor: pointer;
+    }
+    .btn:active { transform: scale(0.98); }
+    .btn-success { background: #16a34a; }
+    .btn:disabled { background: #475569; color: #94a3b8; cursor: not-allowed; }
+
+    /* Navigasi Bawah */
+    .bottom-nav {
+      position: fixed;
+      bottom: 0; left: 0; width: 100%;
+      background: #1e293b;
+      border-top: 1px solid #334155;
+      display: flex;
+      justify-content: space-around;
+      padding: 10px 0;
+      z-index: 100;
+    }
+    .nav-item {
+      color: #64748b;
+      text-align: center;
+      font-size: 11px;
+      cursor: pointer;
+      flex: 1;
+    }
+    .nav-item span { display: block; font-size: 20px; margin-bottom: 2px; }
+    .nav-item.active { color: #38bdf8; font-weight: bold; }
+
+    /* Modal / Pop-up */
+    #toast {
+      position: fixed;
+      top: 20px;
+      left: 50%;
+      transform: translateX(-50%) translateY(-100px);
+      background: #16a34a;
+      color: white;
+      padding: 10px 20px;
+      border-radius: 30px;
+      font-size: 14px;
+      font-weight: bold;
+      box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+      transition: transform 0.3s ease;
+      z-index: 200;
+    }
+    #toast.show { transform: translateX(-50%) translateY(0); }
+
+    input {
+      width: 100%;
+      padding: 11px;
+      border-radius: 8px;
+      border: 1px solid #475569;
+      background: #0f172a;
+      color: white;
+      font-size: 14px;
+      margin-bottom: 10px;
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <div style="font-size: 12px; color: #94a3b8;">Halo, <span id="user-name">Pengguna</span> 👋</div>
+    <div class="wallet-card">
+      <div class="wallet-title">Total Koin Anda</div>
+      <div class="coin-count" id="coin-display">🪙 0</div>
+      <div class="rupiah-eq" id="rupiah-display">Setara dengan Rp 0</div>
+    </div>
+  </header>
+
+  <div class="container">
+
+    <!-- TAB 1: MISI HARIAN & TUGAS -->
+    <div id="tab-misi" class="tab-content active">
+      <div class="card">
+        <h3>🎁 Bonus Check-In Harian</h3>
+        <p>Ambil koin gratis setiap hari tanpa syarat.</p>
+        <button class="btn btn-success" id="checkin-btn" onclick="claimCheckin()">Ambil +100 Koin</button>
+      </div>
+
+      <div class="card">
+        <h3>🎮 Mainkan Mini Game Tap Koin</h3>
+        <p>Ketuk tombol di bawah secepat mungkin untuk mendapatkan koin tambahan.</p>
+        <div style="text-align: center; font-size: 24px; font-weight: bold; color: #38bdf8; margin: 10px 0;" id="game-score">Skor Sesi Ini: 0</div>
+        <button class="btn" onclick="tapCoin()">TAP +10 Koin 🪙</button>
+      </div>
+
+      <div class="card">
+        <h3>🔗 Salin & Bagikan Link Referral</h3>
+        <p>Bagikan link aplikasimu ke teman. Setiap teman yang klik memberi kamu 500 koin!</p>
+        <button class="btn" onclick="shareRef()">Salin Link Referral</button>
+      </div>
+    </div>
+
+    <!-- TAB 2: TARIK SALDO (WITHDRAW) -->
+    <div id="tab-tarik" class="tab-content">
+      <div class="card">
+        <h3>💸 Penarikan Saldo (Withdraw)</h3>
+        <p>Tukar koinmu ke Dompet Digital atau Pulsa.</p>
+        
+        <label style="font-size: 13px; color: #cbd5e1; display: block; margin-bottom: 5px;">Pilih Metode:</label>
+        <select id="wd-method">
+          <option value="DANA">DANA</option>
+          <option value="OVO">OVO</option>
+          <option value="GOPAY">GoPay</option>
+          <option value="PULSA">Pulsa Telkomsel/XL</option>
+        </select>
+
+        <label style="font-size: 13px; color: #cbd5e1; display: block; margin-top: 10px; margin-bottom: 5px;">Nomor HP Tujuan:</label>
+        <input type="number" id="wd-phone" placeholder="Contoh: 081234567890">
+
+        <label style="font-size: 13px; color: #cbd5e1; display: block; margin-top: 5px; margin-bottom: 5px;">Jumlah Penarikan:</label>
+        <select id="wd-amount">
+          <option value="10000">10.000 Koin (Rp 10.000)</option>
+          <option value="25000">25.000 Koin (Rp 25.000)</option>
+          <option value="50000">50.000 Koin (Rp 50.000)</option>
+        </select>
+
+        <button class="btn btn-success" style="margin-top: 10px;" onclick="requestWithdraw()">Tarik Saldo Sekarang</button>
+      </div>
+    </div>
+
+    <!-- TAB 3: PROFIL SAYA -->
+    <div id="tab-profil" class="tab-content">
+      <div class="card">
+        <h3>⚙️ Pengaturan Akun</h3>
+        <label style="font-size: 13px; color: #cbd5e1; display: block; margin-bottom: 5px;">Nama Panggilan:</label>
+        <input type="text" id="input-name" placeholder="Masukkan namamu">
+        <button class="btn" onclick="saveProfile()">Simpan Nama</button>
+      </div>
+      
+      <div class="card">
+        <h3>ℹ️ Tentang Aplikasi</h3>
+        <p style="font-size: 13px; line-height: 1.5;">
+          Aplikasi *CuanEarn* dibuat khusus sebagai simulasi web interaktif berbasis koin. Data koin tersimpan otomatis di perangkatmu menggunakan memori lokal (*LocalStorage*).
+        </p>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Navigasi Bawah -->
+  <div class="bottom-nav">
+    <div class="nav-item active" onclick="switchTab('misi', this)">
+      <span>🎯</span>Misi
+    </div>
+    <div class="nav-item" onclick="switchTab('tarik', this)">
+      <span>💵</span>Tarik Saldo
+    </div>
+    <div class="nav-item" onclick="switchTab('profil', this)">
+      <span>👤</span>Profil
+    </div>
+  </div>
+
+  <!-- Toast Notifikasi -->
+  <div id="toast">Berhasil!</div>
+
+  <script>
+    // Ambil data tersimpan atau buat baru
+    let coins = parseInt(localStorage.getItem('ce_coins') || '500');
+    let userName = localStorage.getItem('ce_name') || 'Sobat Cuan';
+    let lastCheckin = localStorage.getItem('ce_last_checkin') || '';
+    let currentSessionScore = 0;
+
+    document.getElementById('user-name').innerText = userName;
+    document.getElementById('input-name').value = userName;
+    updateUI();
+
+    function updateUI() {
+      document.getElementById('coin-display').innerText = `🪙 ${coins.toLocaleString('id-ID')}`;
+      document.getElementById('rupiah-display').innerText = `Setara dengan Rp ${coins.toLocaleString('id-ID')}`;
+      localStorage.setItem('ce_coins', coins);
+
+      // Cek status tombol check-in harian
+      const today = new Date().toDateString();
+      if (lastCheckin === today) {
+        const btn = document.getElementById('checkin-btn');
+        btn.innerText = "Sudah Check-In Hari Ini ✓";
+        btn.disabled = true;
+      }
+    }
+
+    function switchTab(tabName, el) {
+      document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+      document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+      document.getElementById('tab-' + tabName).classList.add('active');
+      el.classList.add('active');
+    }
+
+    function showToast(msg, isSuccess = true) {
+      const t = document.getElementById('toast');
+      t.innerText = msg;
+      t.style.backgroundColor = isSuccess ? '#16a34a' : '#dc2626';
+      t.classList.add('show');
+      setTimeout(() => t.classList.remove('show'), 2000);
+    }
+
+    // Fitur Check-in
+    function claimCheckin() {
+      const today = new Date().toDateString();
+      if (lastCheckin === today) return;
+
+      coins += 100;
+      lastCheckin = today;
+      localStorage.setItem('ce_last_checkin', today);
+      updateUI();
+      showToast("Berhasil klaim +100 Koin harian! 🎉");
+    }
+
+    // Fitur Mini Game Tap Koin
+    function tapCoin() {
+      coins += 10;
+      currentSessionScore += 10;
+      document.getElementById('game-score').innerText = `Skor Sesi Ini: ${currentSessionScore}`;
+      updateUI();
+    }
+
+    // Fitur Referral
+    function shareRef() {
+      const refLink = window.location.href.split('?')[0] + "?ref=member";
+      navigator.clipboard.writeText(refLink).then(() => {
+        showToast("Link referral berhasil disalin! Bagikan ke teman.");
+      });
+    }
+
+    // Fitur Penarikan Saldo
+    function requestWithdraw() {
+      const phone = document.getElementById('wd-phone').value;
+      const amount = parseInt(document.getElementById('wd-amount').value);
+      const method = document.getElementById('wd-method').value;
+
+      if (!phone || phone.length < 10) {
+        showToast("Masukkan nomor HP tujuan yang valid!", false);
+        return;
+      }
+
+      if (coins < amount) {
+        showToast("Koin kamu belum cukup untuk penarikan ini!", false);
+        return;
+      }
+
+      coins -= amount;
+      updateUI();
+      showToast(`Penarikan Rp ${amount.toLocaleString('id-ID')} ke ${method} (${phone}) diproses!`);
+      document.getElementById('wd-phone').value = '';
+    }
+
+    // Simpan Profil
+    function saveProfile() {
+      const name = document.getElementById('input-name').value.trim();
+      if (!name) return showToast("Nama tidak boleh kosong!", false);
+      userName = name;
+      localStorage.setItem('ce_name', userName);
+      document.getElementById('user-name').innerText = userName;
+      showToast("Profil berhasil disimpan!");
+    }
+  </script>
+</body>
+</html>
